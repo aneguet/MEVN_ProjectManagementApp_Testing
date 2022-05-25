@@ -1,0 +1,1318 @@
+openapi: 3.0.0
+info:
+  title: Timefly API
+  description: MongoDB ExpressJS NodeJS REST API for a Project Management App.<br />Github repository available [here](https://github.com/aneguet/MEVN_ProjectManagementApp).<br />Some endpoints require `auth-token` in order to be executed.
+  version: 1.0.0
+servers:
+  - url: https://timefly-mevn.herokuapp.com/api/
+    description: Heroku remote server
+  - url: http://localhost:4000/api/
+    description: Localhost
+components:
+  securitySchemes:
+    ApiKeyAuth: # arbitrary name for the security scheme
+      type: apiKey
+      in: header # can be "header", "query" or "cookie"
+      name: auth-token
+  schemas:
+    User:
+      type: object
+      required:
+        - 'first_name'
+        - 'last_name'
+        - 'email'
+        - 'password'
+      properties:
+        role:
+          type: string
+          default: 'user'
+          enum: [user, admin]
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+          default: '123456'
+        avatar:
+          type: string
+          default: 'https://i.imgur.com/e5YmXMB.png'
+          description: 'Must be a direct link to a hosted image'
+        registration_date:
+          type: string
+          description: 'It takes the current date as default'
+          example: '2014-01-01T23:28:56.782Z'
+        weekly_hours:
+          type: number
+          default: 35
+    Project:
+      type: object
+      required:
+        - 'name'
+        - 'description'
+        - 'stakeholder'
+        - 'technologies'
+        - 'time_schedule'
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        stakeholder:
+          type: string
+          example: 'Mercedes Benz'
+        leader:
+          type: string
+          description: 'Must be an id composed by numbers and letters'
+        members:
+          type: array
+          description: 'Array of members ids'
+          items:
+            type: object
+            properties:
+              member_id:
+                type: string
+              project_roles:
+                type: array
+                items:
+                  type: string
+                  default: 'Timefly member'
+                  example: 'Designer'
+              assigned_hours:
+                type: number
+                default: 0
+        technologies:
+          type: array
+          description: 'Array of technologies ids'
+          items:
+            type: string
+        time_schedule:
+          type: object
+          properties:
+            start_date:
+              type: string
+              description: 'It takes the current date as default'
+            due_date:
+              type: string
+              description: 'It takes the current date as default'
+            end_date:
+              type: string
+              description: 'It takes the current date as default'
+            estimated_hours:
+              type: number
+              default: 0
+            spent_hours:
+              type: number
+              default: 0
+    Task:
+      type: object
+      required:
+        - 'project_id'
+        - 'name'
+        - 'description'
+        - 'hours_allocated'
+      properties:
+        project_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        assigned_to:
+          type: string
+          description: 'Must be an id composed by numbers and letters. The task is assigned to the user creating the task by default.'
+        hours_allocated:
+          type: number
+          default: 0
+        hours_used:
+          type: number
+          default: 0
+        task_status:
+          type: string
+          default: 'Todo'
+          enum: [Todo, Doing, Done]
+    Technology:
+      type: object
+      required:
+        - 'tech_name'
+      properties:
+        tech_name:
+          type: string
+          example: 'PHP'
+    Avatar:
+      type: object
+      required:
+        - 'img_link'
+      properties:
+        img_link:
+          type: string
+          example: 'https://i.imgur.com/GCvrcOH.png'
+
+paths:
+  /users/register:
+    post:
+      summary: Register new User
+      tags:
+        - User
+      description: ''
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  data:
+                    type: string
+        400:
+          description: Client error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /users/login:
+    post:
+      summary: Login user in order to get JWT token (auth-token)
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        200:
+          description: User successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      user:
+                        $ref: '#/components/schemas/User'
+
+        400:
+          description: Client error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /users:
+    get:
+      summary: Get all users
+      tags:
+        - User
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: Users successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /users/userLogin:
+    get:
+      summary: Get user by the logged in user ID (For Login ONLY)
+      tags:
+        - User
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: Login user successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /users/user:
+    get:
+      summary: Get user by ID  (Admin functionality)
+      tags:
+        - User
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: User ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: User successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        403:
+          description: This request requires an Admin role
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    put:
+      summary: Update user by ID
+      tags:
+        - User
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      parameters:
+        - name: id
+          in: header
+          description: User ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: User successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        404:
+          description: The user you want to update does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      summary: Delete user by ID
+      tags:
+        - User
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: User ID
+          required: true
+          type: string
+      responses:
+        201:
+          description: User successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        404:
+          description: The user you want to delete does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /projects:
+    get:
+      summary: Get all projects (Admin functionality)
+      description: The projects retrieved autopopulate with the technology schema to get the technologies names. They also autopopulate with the user schema to give more information about the project members.
+      tags:
+        - Project
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: Projects successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        403:
+          description: This request requires an Admin role
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /projects/byUser:
+    get:
+      summary: Get all projects by the logged in user ID
+      tags:
+        - Project
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: Projects successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /projects/project:
+    get:
+      summary: Get project by project ID
+      tags:
+        - Project
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: Project ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Project successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    post:
+      summary: Create new project
+      tags:
+        - Project
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        200:
+          description: Project successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    put:
+      summary: Update project by project ID
+      tags:
+        - Project
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: Project ID
+          required: true
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        200:
+          description: Project successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        403:
+          description: The user must be a leader of the project or an Admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        404:
+          description: Project not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      summary: Delete project by ID
+      tags:
+        - Project
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: Project ID
+          required: true
+          type: string
+      responses:
+        201:
+          description: Project successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Project'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /tasks:
+    get:
+      summary: Get all tasks (Admin functionality)
+      tags:
+        - Task
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: Tasks successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        403:
+          description: This request requires an Admin role
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /tasks/byProjectAndUser:
+    get:
+      summary: Get all tasks by project ID and logged in user ID
+      tags:
+        - Task
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: project ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Tasks successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /tasks/byProject:
+    get:
+      summary: Get all tasks by project ID
+      tags:
+        - Task
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: project ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Tasks successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /tasks/task:
+    get:
+      summary: Get task by task ID
+      tags:
+        - Task
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: project ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Task successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+    post:
+      summary: Create new task
+      tags:
+        - Task
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        200:
+          description: Task successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    put:
+      summary: Update task by ID
+      tags:
+        - Task
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: Task ID
+          required: true
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        200:
+          description: Task successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        404:
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      summary: Delete task by ID
+      tags:
+        - Task
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: header
+          description: Task ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Task successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        400:
+          description: Token is not valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        401:
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        404:
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /technologies:
+    get:
+      summary: Get all technologies
+      tags:
+        - Technology
+      responses:
+        200:
+          description: Technologies successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Technology'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    post:
+      summary: Create new technology
+      tags:
+        - Technology
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Technology'
+      responses:
+        200:
+          description: Technology successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Technology'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /technologies/technology:
+    get:
+      summary: Get technology by ID
+      tags:
+        - Technology
+      parameters:
+        - name: id
+          in: header
+          description: Technology ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Technology successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Technology'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    delete:
+      summary: Delete technology by ID
+      tags:
+        - Technology
+      parameters:
+        - name: id
+          in: header
+          description: Technology ID
+          required: true
+          type: string
+      responses:
+        200:
+          description: Technology successfully deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Technology'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /avatars:
+    get:
+      summary: Get all avatars
+      tags:
+        - Avatar
+      responses:
+        200:
+          description: Avatars successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Avatar'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+    post:
+      summary: Create new avatar
+      tags:
+        - Avatar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Avatar'
+      responses:
+        200:
+          description: Avatar successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Avatar'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /avatars/randomAvatar:
+    get:
+      summary: Get random avatar
+      tags:
+        - Avatar
+      responses:
+        200:
+          description: Avatar successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Avatar'
+        500:
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
