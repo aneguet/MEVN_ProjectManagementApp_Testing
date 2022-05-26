@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app.js",
-    "start-dev": "nodemon app.js"
+    "start": "cross-env NODE_ENV=development node app.js",
+    "start-dev": "cross-env NODE_ENV=development nodemon app.js",
+    "test": "cross-env NODE_ENV=test mocha --recursive --exit"
   },
   "author": "",
   "license": "ISC",
@@ -27,6 +27,9 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "chai": "^4.3.6",
+    "chai-http": "^4.3.0",
+    "mocha": "^10.0.0",
     "nodemon": "^2.0.15"
   }
 }

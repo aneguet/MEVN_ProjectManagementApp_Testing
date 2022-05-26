@@ -1,10 +1,10 @@
 openapi: 3.0.0
 info:
   title: Timefly API
-  description: MongoDB ExpressJS NodeJS REST API for a Project Management App.<br />Github repository available [here](https://github.com/aneguet/MEVN_ProjectManagementApp).<br />Some endpoints require `auth-token` in order to be executed.
+  description: MongoDB ExpressJS NodeJS REST API for a Project Management App.<br />Github repository available [here](https://github.com/aneguet/MEVN_ProjectManagementApp_Testing).<br />Some endpoints require `auth-token` in order to be executed.
   version: 1.0.0
 servers:
-  - url: https://timefly-mevn.herokuapp.com/api/
+  - url: https://mevn-project-management-test.herokuapp.com/api/
     description: Heroku remote server
   - url: http://localhost:4000/api/
     description: Localhost
