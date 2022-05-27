@@ -6,7 +6,7 @@
   "scripts": {
     "start": "cross-env NODE_ENV=development node app.js",
     "start-dev": "cross-env NODE_ENV=development nodemon app.js",
-    "test": "cross-env NODE_ENV=test mocha --recursive --exit"
+    "unit-test": "cross-env NODE_ENV=test mocha --recursive test/unit --exit"
   },
   "author": "",
   "license": "ISC",

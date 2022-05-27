@@ -28,7 +28,7 @@ jobs:
         working-directory: ./backend
         run: |
           npm install
-          npm test
+          npm run unit-test
         env:
           DBHOST: ${{ secrets.DBHOST }}
           TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
