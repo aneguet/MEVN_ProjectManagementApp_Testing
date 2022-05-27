@@ -8,7 +8,7 @@ let userSchema = new Schema({
     type: String,
     required: false,
     enum: ['admin', 'user'], // Only accepts 'admin' or 'user'
-    // default: 'user',
+    // default: 'user'
   },
   first_name: {
     type: String,
