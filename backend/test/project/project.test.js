@@ -425,9 +425,6 @@ describe('/Projects', () => {
                   .set({ id: newProjectId })
                   .end((err, res) => {
                     expect(res.status).to.be.equal(201);
-                    // expect(res.body.message).to.be.equal(
-                    //   'Project deleted and tasks deleted.'
-                    // );
                     // 5) Verify 0 Projects in the DB
                     chai
                       .request(server)
