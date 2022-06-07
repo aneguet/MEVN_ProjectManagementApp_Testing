@@ -6,7 +6,11 @@
   "scripts": {
     "start": "cross-env NODE_ENV=development node app.js",
     "start-dev": "cross-env NODE_ENV=development nodemon app.js",
-    "unit-test": "cross-env NODE_ENV=test mocha --recursive test/unit --exit"
+    "unit-test": "cross-env NODE_ENV=test mocha --timeout 10000 test/unit --exit",
+    "project-test": "cross-env NODE_ENV=test mocha --timeout 10000 test/project --exit",
+    "task-test": "cross-env NODE_ENV=test mocha --timeout 10000 test/task --exit",
+    "tech-test": "cross-env NODE_ENV=test mocha --timeout 10000 test/tech --exit",
+    "avatar-test": "cross-env NODE_ENV=test mocha --timeout 10000 test/avatar --exit"
   },
   "author": "",
   "license": "ISC",

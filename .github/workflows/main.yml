@@ -29,6 +29,10 @@ jobs:
         run: |
           npm install
           npm run unit-test
+          npm run project-test
+          npm run task-test
+          npm run tech-test
+          npm run avatar-test
         env:
           DBHOST: ${{ secrets.DBHOST }}
           TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
