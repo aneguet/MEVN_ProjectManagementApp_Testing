@@ -2,4 +2,3 @@ This repository is a clone of [MEVN_ProjectManagementApp](https://github.com/ane
 
 - [Link](https://mevn-project-management-test.herokuapp.com/api/docs/) to API (swagger).
 
-- [Link](https://timefly-mevn-testing.netlify.app/) to Timefly Website.
